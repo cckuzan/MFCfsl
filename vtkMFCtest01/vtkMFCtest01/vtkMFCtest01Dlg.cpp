@@ -93,13 +93,19 @@ CvtkMFCtest01Dlg::CvtkMFCtest01Dlg(CWnd* pParent /*=NULL*/)
 	this->iren = vtkRenderWindowInteractor::New();
 	this->renwin = vtkRenderWindow::New();
 	this->pvtkreslice = vtkImageReslice::New();
-	this->pviewer = vtkImageViewer::New();
+//	this->pviewer = vtkImageViewer::New();
 
 	this->pvtkMFCWindow1 = NULL;
 	this->slicex = 0;
 	this->ren1 = vtkRenderer::New();
 	this->renwin1 = vtkRenderWindow::New();
 	this->iren1 = vtkRenderWindowInteractor::New();
+
+	this->ptable = vtkWindowLevelLookupTable::New();
+	this->pcolor = vtkImageMapToColors::New();
+	this->pactor = vtkImageActor::New();
+	this->prender = vtkRenderer::New();
+	this->prenderwindow = vtkRenderWindow::New();
 
 	this->Cpath = "";
 	this->ptBorder = CPoint(0,0);
@@ -129,6 +135,7 @@ BEGIN_MESSAGE_MAP(CvtkMFCtest01Dlg, CDialogEx)
 //ON_WM_LBUTTONDOWN()
 //ON_WM_LBUTTONUP()
 //ON_WM_LBUTTONUP()
+ON_BN_CLICKED(IDCANCEL, &CvtkMFCtest01Dlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -210,7 +217,9 @@ void CvtkMFCtest01Dlg::ExecutePipeline()
 		this->pvtkreslice->SetResliceAxesDirectionCosines(axiaX,axiaY,axiaZ);
 		this->pvtkreslice->SetResliceAxesOrigin(center);
 		this->pvtkreslice->SetInterpolationModeToLinear();
-		this->pviewer->SetInput(this->pvtkreslice->GetOutput());
+//		this->pviewer->SetInput(this->pvtkreslice->GetOutput());
+
+		
 
 
 
@@ -229,10 +238,12 @@ void CvtkMFCtest01Dlg::ExecutePipeline()
 		this->ren->AddVolume(this->volume);
 		
 
-		this->pviewer->SetupInteractor(this->iren1);
+//		this->pviewer->SetupInteractor(this->iren1);  // cc
+
+
 //		this->pviewer->Render();
 //		this->iren->Initialize(); 
-		this->pvtkMFCWindow1->GetRenderWindow()->AddRenderer(this->pviewer->GetRenderer());
+		this->pvtkMFCWindow1->GetRenderWindow()->AddRenderer(this->prender);
 		this->pvtkMFCWindow1->RedrawWindow();
 //		UpdateData(TRUE);
 		this->pvtkMFCWindow->GetRenderWindow()->AddRenderer(this->ren);
@@ -322,22 +333,30 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 //	this->pviewer->SetColorLevel(10000.0);
 //	this->pviewer->
-	vtkWindowLevelLookupTable *table =  vtkWindowLevelLookupTable::New();
-	table->SetWindow(2000);
-	table->SetLevel(1000);
+	this->ptable->SetWindow(311);
+	this->ptable->SetLevel(155);
 
-	vtkImageMapToColors *color = vtkImageMapToColors::New();
-	color->SetLookupTable(table);
-	color->SetInputConnection(this->pvtkreslice->GetOutputPort());
-	this->pviewer->GetRenderWindow()->SetSize(1000,1000);
+	this->pcolor->SetLookupTable(this->ptable);
+	this->pcolor->SetInputConnection(this->pvtkreslice->GetOutputPort());
+
+	this->pactor->SetInput(this->pcolor->GetOutput());
+
+	this->prender->AddActor(this->pactor);
+
+	this->prenderwindow->AddRenderer(this->prender);
+	this->prenderwindow->SetParentId(this->GetDlgItem(IDC_PIC_X));
+
+
+
+//	this->pviewer->GetRenderWindow()->SetSize(1000,1000);
 //	this->pviewer->SetInputConnection(this->pvtkreslice);
 
-	this->pviewer->SetColorWindow(311);
-	this->pviewer->SetColorLevel(11);
-	this->pviewer->SetPosition(600,800);
+//	this->pviewer->SetColorWindow(311);
+//	this->pviewer->SetColorLevel(11);
+//	this->pviewer->SetPosition(600,800);
 
 //	this->pviewer->set
-	this->pviewer->SetParentId(this->GetDlgItem(IDC_PIC_X));
+//	this->pviewer->SetParentId(this->GetDlgItem(IDC_PIC_X));
 	this->pvtkMFCWindow1 = new vtkMFCWindow(this->GetDlgItem(IDC_PIC_X));
 
 	this->pvtkMFCWindow = new vtkMFCWindow(this->GetDlgItem(IDC_MAIN_WND));
@@ -624,3 +643,11 @@ void CvtkMFCtest01Dlg::OnNMCustomdrawSlider1(NMHDR* pNMHDR,LRESULT* pResult)
 //	}
 //	CDialogEx::OnLButtonUp(nFlags, point);
 //}
+
+
+void CvtkMFCtest01Dlg::OnBnClickedCancel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+//	CDialogEx::OnCancel();
+
+}
