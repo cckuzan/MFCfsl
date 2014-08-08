@@ -101,11 +101,16 @@ CvtkMFCtest01Dlg::CvtkMFCtest01Dlg(CWnd* pParent /*=NULL*/)
 	this->renwin1 = vtkRenderWindow::New();
 	this->iren1 = vtkRenderWindowInteractor::New();
 
-	this->ptable = vtkWindowLevelLookupTable::New();
-	this->pcolor = vtkImageMapToColors::New();
-	this->pactor = vtkImageActor::New();
+//	this->ptable = vtkWindowLevelLookupTable::New();
+//	this->pcolor = vtkImageMapToColors::New();
+//	this->pactor = vtkImageActor::New();
 	this->prender = vtkRenderer::New();
 	this->prenderwindow = vtkRenderWindow::New();
+	this->pactor2d = vtkActor2D::New();
+	this->pmapper = vtkImageMapper::New();
+	this->pfilter = vtkImageDataGeometryFilter::New();
+//	this->iren2 = vtkRenderWindowInteractor::New();
+//	this->style = vtkInteractorStyleImage::New();
 
 	this->Cpath = "";
 	this->ptBorder = CPoint(0,0);
@@ -333,18 +338,32 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 //	this->pviewer->SetColorLevel(10000.0);
 //	this->pviewer->
-	this->ptable->SetWindow(311);
-	this->ptable->SetLevel(155);
+//	this->ptable->SetWindow(311);
+//	this->ptable->SetLevel(155);
 
-	this->pcolor->SetLookupTable(this->ptable);
-	this->pcolor->SetInputConnection(this->pvtkreslice->GetOutputPort());
+//	this->pcolor->SetLookupTable(this->ptable);
+//	this->pcolor->SetInputConnection(this->pvtkreslice->GetOutputPort());
 
-	this->pactor->SetInput(this->pcolor->GetOutput());
+//	this->pfilter->SetInputConnection(this->pcolor->GetOutputPort());
+//	this->pfilter->set
+	this->pmapper->SetInput(this->pvtkreslice->GetOutput());
+	this->pmapper->SetColorWindow(311);
+	this->pmapper->SetColorLevel(155);
+//	this->pmapper->SetInputConnection(this->pfilter->GetOutputPort());
+//	this->pmapper->Update();
+	this->pactor2d->SetMapper(this->pmapper);
+	this->pactor2d->SetPosition(100,20);
+//	this->pactor->SetInput(this->pcolor->GetOutput());
 
-	this->prender->AddActor(this->pactor);
+	this->prender->AddActor(this->pactor2d);
 
 	this->prenderwindow->AddRenderer(this->prender);
 	this->prenderwindow->SetParentId(this->GetDlgItem(IDC_PIC_X));
+	this->prenderwindow->SetSize(300,300);
+//	this->iren2->SetInteractorStyle(style);
+//	this->prenderwindow->SetInteractor(this->iren2);
+//	this->iren2->SetRenderWindow(this->prenderwindow);
+//	this->prenderwindow->HideCursor();
 
 
 
@@ -358,6 +377,7 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 //	this->pviewer->set
 //	this->pviewer->SetParentId(this->GetDlgItem(IDC_PIC_X));
 	this->pvtkMFCWindow1 = new vtkMFCWindow(this->GetDlgItem(IDC_PIC_X));
+
 
 	this->pvtkMFCWindow = new vtkMFCWindow(this->GetDlgItem(IDC_MAIN_WND));
 	vtkCallbackCommand *callback = vtkCallbackCommand::New();
