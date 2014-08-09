@@ -101,6 +101,8 @@ CvtkMFCtest01Dlg::CvtkMFCtest01Dlg(CWnd* pParent /*=NULL*/)
 	this->renwin1 = vtkRenderWindow::New();
 	this->iren1 = vtkRenderWindowInteractor::New();
 
+	this->clientx = 0;
+	this->clienty = 0;
 //	this->ptable = vtkWindowLevelLookupTable::New();
 //	this->pcolor = vtkImageMapToColors::New();
 //	this->pactor = vtkImageActor::New();
@@ -391,6 +393,8 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 	CRect cRectClient;
 	GetClientRect(&cRectClient);
+	this->clientx = cRectClient.right;
+	this->clienty = cRectClient.bottom;
 
 	this->ptBorder.x = cRectClient.Width() - cRectVTK.Width();
 	this->ptBorder.y = cRectClient.Height() - cRectVTK.Height();
@@ -491,29 +495,43 @@ void CvtkMFCtest01Dlg::OnSize(UINT nType, int cx, int cy)
 	if(::IsWindow(this->GetSafeHwnd()))
 	{
 		int tmpcx,tmpcy;
+		int chcx,chcy;
 		tmpcx = cx;
 		tmpcy = cy;
 		CRect cRectVTK;
 		this->GetDlgItem(IDC_MAIN_WND)->GetWindowRect(&cRectVTK);
 		ScreenToClient(cRectVTK);
-//		this->pvtkMFCWindow->GetClientRect(&cRectVTK);
 
+//		static CRect cRectClient;
+//		GetClientRect(&cRectClient);
+//		this->pvtkMFCWindow->GetClientRect(&cRectVTK);
+		CRect cRectPicx;
+		this->GetDlgItem(IDC_PIC_X)->GetWindowRect(&cRectPicx);
+		chcx = cx - this->clientx;
+		chcy = cy - this->clienty;
+		this->clientx = cx;
+		this->clienty = cy;
 		if(this->pvtkMFCWindow)
 		{
-			tmpcx -= ptBorder.x;
-			tmpcy -= ptBorder.y;
-			this->GetDlgItem(IDC_MAIN_WND)->SetWindowPos(NULL,cRectVTK.left,cRectVTK.top,300,300,SWP_NOACTIVATE | SWP_NOZORDER );
-			this->pvtkMFCWindow->SetWindowPos(NULL,0,0,300,300,SWP_NOACTIVATE | SWP_NOZORDER );
+//			tmpcx -= ptBorder.x;
+//			tmpcy -= ptBorder.y;
+			this->GetDlgItem(IDC_MAIN_WND)->SetWindowPos(NULL,cRectVTK.left,cRectVTK.top,cRectVTK.Width() + chcx / 2,cRectVTK.Height() + chcy /2,
+				SWP_NOACTIVATE | SWP_NOZORDER );
+			this->pvtkMFCWindow->SetWindowPos(NULL,0,0,cRectVTK.Width() + chcx / 2,cRectVTK.Height() + chcy /2,
+				SWP_NOACTIVATE | SWP_NOZORDER );
 		}
-		tmpcx = cx;
-		tmpcy = cy;
+//		tmpcx = cx;
+//		tmpcy = cy;
 //		tmpcx = tmpcx + 
 		if(this->pvtkMFCWindow1)
 		{
-			tmpcx -= this->picx.x;
-			tmpcy -= this->picx.y;
-			this->GetDlgItem(IDC_PIC_X)->SetWindowPos(NULL,0,0,tmpcx,tmpcy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
-			this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,tmpcx,tmpcy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+			cx -= this->picx.x;
+			cy -= this->picx.y;
+			this->GetDlgItem(IDC_PIC_X)->SetWindowPos(NULL,cRectVTK.left + cRectVTK.Width() + chcx / 2,cRectVTK.top,
+				cRectPicx.Width() + (chcx - chcx / 2) ,cRectPicx.Height() + (chcy - chcy / 2),
+				SWP_NOACTIVATE | SWP_NOZORDER );
+			this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,cRectPicx.Width() + (chcx - chcx / 2),cRectPicx.Height() + (chcy - chcy / 2),
+				SWP_NOACTIVATE | SWP_NOZORDER );
 		}
 
 	}
