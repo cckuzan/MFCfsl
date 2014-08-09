@@ -114,6 +114,7 @@ CvtkMFCtest01Dlg::CvtkMFCtest01Dlg(CWnd* pParent /*=NULL*/)
 
 	this->Cpath = "";
 	this->ptBorder = CPoint(0,0);
+	this->picx = CPoint(0,0);
 }
 
 void CvtkMFCtest01Dlg::DoDataExchange(CDataExchange* pDX)
@@ -359,7 +360,7 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 	this->prenderwindow->AddRenderer(this->prender);
 	this->prenderwindow->SetParentId(this->GetDlgItem(IDC_PIC_X));
-	this->prenderwindow->SetSize(300,300);
+//	this->prenderwindow->SetSize(300,300);
 //	this->iren2->SetInteractorStyle(style);
 //	this->prenderwindow->SetInteractor(this->iren2);
 //	this->iren2->SetRenderWindow(this->prenderwindow);
@@ -393,6 +394,12 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 	this->ptBorder.x = cRectClient.Width() - cRectVTK.Width();
 	this->ptBorder.y = cRectClient.Height() - cRectVTK.Height();
+
+	CRect cPicx;
+	this->pvtkMFCWindow1->GetClientRect(&cPicx);
+
+	this->picx.x = cRectClient.Width() - cPicx.Width();
+	this->picx.y = cRectClient.Height() - cPicx.Height();
 
 	m_Slider.SetRangeMin(1, false);
 	m_Slider.SetRangeMax(182, false);
@@ -483,13 +490,32 @@ void CvtkMFCtest01Dlg::OnSize(UINT nType, int cx, int cy)
 	// TODO: 在此处添加消息处理程序代码
 	if(::IsWindow(this->GetSafeHwnd()))
 	{
+		int tmpcx,tmpcy;
+		tmpcx = cx;
+		tmpcy = cy;
+		CRect cRectVTK;
+		this->GetDlgItem(IDC_MAIN_WND)->GetWindowRect(&cRectVTK);
+		ScreenToClient(cRectVTK);
+//		this->pvtkMFCWindow->GetClientRect(&cRectVTK);
+
 		if(this->pvtkMFCWindow)
 		{
-			cx -= ptBorder.x;
-			cy -= ptBorder.y;
-			this->GetDlgItem(IDC_MAIN_WND)->SetWindowPos(NULL,0,0,cx,cy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
-			this->pvtkMFCWindow->SetWindowPos(NULL,0,0,cx,cy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+			tmpcx -= ptBorder.x;
+			tmpcy -= ptBorder.y;
+			this->GetDlgItem(IDC_MAIN_WND)->SetWindowPos(NULL,cRectVTK.left,cRectVTK.top,300,300,SWP_NOACTIVATE | SWP_NOZORDER );
+			this->pvtkMFCWindow->SetWindowPos(NULL,0,0,300,300,SWP_NOACTIVATE | SWP_NOZORDER );
 		}
+		tmpcx = cx;
+		tmpcy = cy;
+//		tmpcx = tmpcx + 
+		if(this->pvtkMFCWindow1)
+		{
+			tmpcx -= this->picx.x;
+			tmpcy -= this->picx.y;
+			this->GetDlgItem(IDC_PIC_X)->SetWindowPos(NULL,0,0,tmpcx,tmpcy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+			this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,tmpcx,tmpcy,SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+		}
+
 	}
 }
 
