@@ -8,7 +8,8 @@
 #include "afxdialogex.h"
 #include "vtkWindowLevelLookupTable.h"
 #include "vtkImageMapToColors.h"
-
+#include "vtkProperty2D.h"
+#include "vtkProperty.h"
 #include "vtkCallbackCommand.h"
 
 #define NUM 1002
@@ -110,7 +111,21 @@ CvtkMFCtest01Dlg::CvtkMFCtest01Dlg(CWnd* pParent /*=NULL*/)
 	this->prenderwindow = vtkRenderWindow::New();
 	this->pactor2d = vtkActor2D::New();
 	this->pmapper = vtkImageMapper::New();
-	this->pfilter = vtkImageDataGeometryFilter::New();
+	this->pmagx = vtkImageMagnify::New();
+	this->pshrinkx = vtkImageShrink3D::New();
+
+	this->prendery = vtkRenderer::New();
+	this->prenderwindowy = vtkRenderWindow::New();
+	this->pactor2dy = vtkActor2D::New();
+	this->pmappery = vtkImageMapper::New();
+	this->pvtkreslicey = vtkImageReslice::New();
+
+	this->prenderz = vtkRenderer::New();
+	this->prenderwindowz = vtkRenderWindow::New();
+	this->pactor2dz = vtkActor2D::New();
+	this->pmapperz = vtkImageMapper::New();
+	this->pvtkreslicez = vtkImageReslice::New();
+//	this->pfilter = vtkImageDataGeometryFilter::New();
 //	this->iren2 = vtkRenderWindowInteractor::New();
 //	this->style = vtkInteractorStyleImage::New();
 
@@ -143,7 +158,7 @@ BEGIN_MESSAGE_MAP(CvtkMFCtest01Dlg, CDialogEx)
 //ON_WM_LBUTTONDOWN()
 //ON_WM_LBUTTONUP()
 //ON_WM_LBUTTONUP()
-ON_BN_CLICKED(IDCANCEL, &CvtkMFCtest01Dlg::OnBnClickedCancel)
+//ON_BN_CLICKED(IDCANCEL, &CvtkMFCtest01Dlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -227,9 +242,24 @@ void CvtkMFCtest01Dlg::ExecutePipeline()
 		this->pvtkreslice->SetInterpolationModeToLinear();
 //		this->pviewer->SetInput(this->pvtkreslice->GetOutput());
 
-		
+		static double coronalX[3] = {1,0,0};
+		static double coronalY[3] = {0,0,-1};
+		static double coronalZ[3] = {0,1,0};
 
+		this->pvtkreslicey->SetInput((vtkImageData *)this->pvtkImageData);
+		this->pvtkreslicey->SetOutputDimensionality(2);
+		this->pvtkreslicey->SetResliceAxesDirectionCosines(coronalX,coronalY,coronalZ);
+		this->pvtkreslicey->SetResliceAxesOrigin(center);
+		this->pvtkreslicey->SetInterpolationModeToLinear();
 
+		static double sagittalX[3] = {0,1,0};
+		static double sagittalY[3] = {0,0,-1};
+		static double sagittalZ[3] = {-1,0,0};
+		this->pvtkreslicez->SetInput((vtkImageData *)this->pvtkImageData);
+		this->pvtkreslicez->SetOutputDimensionality(2);
+		this->pvtkreslicez->SetResliceAxesDirectionCosines(sagittalX,sagittalY,sagittalZ);
+		this->pvtkreslicez->SetResliceAxesOrigin(center);
+		this->pvtkreslicez->SetInterpolationModeToLinear();
 
 		this->pVolumeMapper->RemoveAllInputs();
 		this->pVolumeMapper->Delete();
@@ -253,6 +283,10 @@ void CvtkMFCtest01Dlg::ExecutePipeline()
 //		this->iren->Initialize(); 
 		this->pvtkMFCWindow1->GetRenderWindow()->AddRenderer(this->prender);
 		this->pvtkMFCWindow1->RedrawWindow();
+		this->pvtkMFCWindowy->GetRenderWindow()->AddRenderer(this->prendery);
+		this->pvtkMFCWindowy->RedrawWindow();
+		this->pvtkMFCWindowz->GetRenderWindow()->AddRenderer(this->prenderz);
+		this->pvtkMFCWindowz->RedrawWindow();
 //		UpdateData(TRUE);
 		this->pvtkMFCWindow->GetRenderWindow()->AddRenderer(this->ren);
 		this->ifile.close();
@@ -349,25 +383,62 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 //	this->pfilter->SetInputConnection(this->pcolor->GetOutputPort());
 //	this->pfilter->set
-	this->pmapper->SetInput(this->pvtkreslice->GetOutput());
+	this->pmagx->SetInput(this->pvtkreslice->GetOutput());
+	this->pmagx->SetMagnificationFactors(3,3,1);
+	this->pshrinkx->SetInput(this->pmagx->GetOutput());
+	this->pshrinkx->SetShrinkFactors(2,2,1);
+	this->pmagx->InterpolateOn();
+	this->pmapper->SetInput(this->pshrinkx->GetOutput());
+//	this->pmapper->SetInput(this->pvtkreslice->GetOutput());
 	this->pmapper->SetColorWindow(311);
 	this->pmapper->SetColorLevel(155);
+
 //	this->pmapper->SetInputConnection(this->pfilter->GetOutputPort());
 //	this->pmapper->Update();
 	this->pactor2d->SetMapper(this->pmapper);
 	this->pactor2d->SetPosition(100,20);
+//	this->pactor2d->GetProperty()->set
+//	this->pactor2d->SetWidth(300);
+//	this->pactor2d->SetHeight(300);
 //	this->pactor->SetInput(this->pcolor->GetOutput());
 
 	this->prender->AddActor(this->pactor2d);
 
 	this->prenderwindow->AddRenderer(this->prender);
 	this->prenderwindow->SetParentId(this->GetDlgItem(IDC_PIC_X));
+	this->prenderwindow->SetSize(300,300);
 //	this->prenderwindow->SetSize(300,300);
 //	this->iren2->SetInteractorStyle(style);
 //	this->prenderwindow->SetInteractor(this->iren2);
 //	this->iren2->SetRenderWindow(this->prenderwindow);
 //	this->prenderwindow->HideCursor();
 
+	this->pmappery->SetInput(this->pvtkreslicey->GetOutput());
+	this->pmappery->SetColorWindow(311);
+	this->pmappery->SetColorLevel(155);
+
+	this->pactor2dy->SetMapper(this->pmappery);
+	this->pactor2dy->SetPosition(100,20);
+
+
+	this->prendery->AddActor(this->pactor2dy);
+
+	this->prenderwindowy->AddRenderer(this->prendery);
+	this->prenderwindowy->SetParentId(this->GetDlgItem(IDC_PIC_Y));
+
+	//////////////////////////////////////////
+	this->pmapperz->SetInput(this->pvtkreslicez->GetOutput());
+	this->pmapperz->SetColorWindow(311);
+	this->pmapperz->SetColorLevel(155);
+
+	this->pactor2dz->SetMapper(this->pmapperz);
+	this->pactor2dz->SetPosition(100,20);
+
+
+	this->prenderz->AddActor(this->pactor2dz);
+
+	this->prenderwindowz->AddRenderer(this->prenderz);
+	this->prenderwindowz->SetParentId(this->GetDlgItem(IDC_PIC_Z));
 
 
 //	this->pviewer->GetRenderWindow()->SetSize(1000,1000);
@@ -379,8 +450,12 @@ BOOL CvtkMFCtest01Dlg::OnInitDialog()
 
 //	this->pviewer->set
 //	this->pviewer->SetParentId(this->GetDlgItem(IDC_PIC_X));
+
 	this->pvtkMFCWindow1 = new vtkMFCWindow(this->GetDlgItem(IDC_PIC_X));
 
+	this->pvtkMFCWindowy = new vtkMFCWindow(this->GetDlgItem(IDC_PIC_Y));
+
+	this->pvtkMFCWindowz = new vtkMFCWindow(this->GetDlgItem(IDC_PIC_Z));
 
 	this->pvtkMFCWindow = new vtkMFCWindow(this->GetDlgItem(IDC_MAIN_WND));
 	vtkCallbackCommand *callback = vtkCallbackCommand::New();
@@ -528,12 +603,31 @@ void CvtkMFCtest01Dlg::OnSize(UINT nType, int cx, int cy)
 			cx -= this->picx.x;
 			cy -= this->picx.y;
 			this->GetDlgItem(IDC_PIC_X)->SetWindowPos(NULL,cRectVTK.left + cRectVTK.Width() + chcx / 2,cRectVTK.top,
-				cRectPicx.Width() + (chcx - chcx / 2) ,cRectPicx.Height() + (chcy - chcy / 2),
+				cRectPicx.Width() + (chcx - chcx / 2) ,cRectPicx.Height() + chcy / 2,
 				SWP_NOACTIVATE | SWP_NOZORDER );
-			this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,cRectPicx.Width() + (chcx - chcx / 2),cRectPicx.Height() + (chcy - chcy / 2),
+			this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,cRectPicx.Width() + (chcx - chcx / 2),cRectPicx.Height() + chcy / 2,
 				SWP_NOACTIVATE | SWP_NOZORDER );
 		}
 
+		if(this->pvtkMFCWindowy)
+		{
+			this->GetDlgItem(IDC_PIC_Y)->SetWindowPos(NULL,cRectVTK.left,cRectVTK.top + cRectVTK.Height() + chcy /2,
+					cRectVTK.Width() + chcx / 2 ,cRectVTK.Height() + (chcy - chcy / 2),
+					SWP_NOACTIVATE | SWP_NOZORDER );
+			this->pvtkMFCWindowy->SetWindowPos(NULL,0,0,cRectVTK.Width() + chcx / 2 ,cRectVTK.Height() + (chcy - chcy / 2),
+				SWP_NOACTIVATE | SWP_NOZORDER );
+		}
+
+			/*this->pvtkMFCWindow1->SetWindowPos(NULL,0,0,cRectPicx.Width() + (chcx - chcx / 2),cRectPicx.Height() + (chcy - chcy / 2),
+				SWP_NOACTIVATE | SWP_NOZORDER );*/
+		if(this->pvtkMFCWindowz)
+		{
+			this->GetDlgItem(IDC_PIC_Z)->SetWindowPos(NULL,cRectVTK.left + cRectVTK.Width() + chcx / 2,cRectVTK.top + cRectVTK.Height() + chcy / 2,
+					cRectPicx.Width() + (chcx - chcx / 2) ,cRectPicx.Height() + (chcy - chcy / 2),
+					SWP_NOACTIVATE | SWP_NOZORDER );
+			this->pvtkMFCWindowz->SetWindowPos(NULL,0,0,cRectPicx.Width() + (chcx - chcx / 2) ,cRectPicx.Height() + (chcy - chcy / 2),
+				SWP_NOACTIVATE | SWP_NOZORDER );
+		}
 	}
 }
 
@@ -643,75 +737,3 @@ void CvtkMFCtest01Dlg::OnNMCustomdrawSlider1(NMHDR* pNMHDR,LRESULT* pResult)
 //	m_SliderValue.Format(_T("%d%%"), nPos);
 }
 
-//void CAboutDlg::OnMouseMove(UINT nFlags, CPoint point)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	int nPos = m_Slider.GetPos();
-//	m_SliderValue.Format(_T("%d%%"), nPos);
-//	CDialogEx::OnMouseMove(nFlags, point);
-//}
-
-
-//void CvtkMFCtest01Dlg::OnMouseMove(UINT nFlags, CPoint point)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	int nPos = m_Slider.GetPos();
-//	m_SliderValue.Format(_T("%d%%"), nPos);
-//	UpdateData(false);
-//	CDialogEx::OnMouseMove(nFlags, point);
-//}
-
-
-
-//void CvtkMFCtest01Dlg::OnTimer(UINT_PTR nIDEvent)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	int nPos = m_Slider.GetPos();
-//	m_SliderValue.Format(_T("%d%%"), nPos);
-//	UpdateData(false);
-//	this->slicex = nPos;
-//		double center[3] = {91,108,this->slicex};
-//		 static double axiaX[3] = {1,0,0};
-//		 static double axiaY[3] = {0,1,0};
-//		 static double axiaZ[3] = {0,0,1};
-//		 this->pvtkreslice->SetResliceAxesDirectionCosines(axiaX,axiaY,axiaZ);
-//		this->pvtkreslice->SetResliceAxesOrigin(center);
-//		this->pvtkMFCWindow1->RedrawWindow();	
-//	CDialogEx::OnTimer(nIDEvent);
-//}
-
-
-//void CvtkMFCtest01Dlg::OnLButtonDown(UINT nFlags, CPoint point)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	SetTimer(1,50,NULL);
-//	CDialogEx::OnLButtonDown(nFlags, point);
-//}
-
-
-//void CvtkMFCtest01Dlg::OnLButtonUp(UINT nFlags, CPoint point)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	KillTimer(1);
-//	CDialogEx::OnLButtonUp(nFlags, point);
-//}
-
-
-//void CvtkMFCtest01Dlg::OnLButtonUp(UINT nFlags, CPoint point)
-//{
-//	// TODO: 在此添加消息处理程序代码和/或调用默认值
-//	if(	timer1 == 1)
-//	{
-//		KillTimer(1);
-//		timer1 = 0;
-//	}
-//	CDialogEx::OnLButtonUp(nFlags, point);
-//}
-
-
-void CvtkMFCtest01Dlg::OnBnClickedCancel()
-{
-	// TODO: 在此添加控件通知处理程序代码
-//	CDialogEx::OnCancel();
-
-}
